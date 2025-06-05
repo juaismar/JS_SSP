@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { DataTablesServer } = require('./datatables-server');
+const { SSP } = require('./datatables-server');
 require('dotenv').config();
 
 const app = express();
@@ -14,7 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Configuración de DataTables
-const dataTablesServer = new DataTablesServer({
+const ssp = new SSP({
     dialect: process.env.DB_DIALECT || 'mysql',
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
@@ -30,7 +30,15 @@ app.get('/', (req, res) => {
 // Ruta para el endpoint de DataTables
 app.post('/api/data', async (req, res) => {
     try {
-        const result = await dataTablesServer.processRequest(req.body);
+        // Configurar las columnas
+        ssp.setColumns([
+            { db: 'id', dt: 'id', formatter: null },
+            { db: 'nombre', dt: 'nombre', formatter: (value) => value.toUpperCase() },
+            { db: 'email', dt: 'email', formatter: null },
+            { db: 'fecha_registro', dt: 2, formatter: (value) => new Date(value).toLocaleDateString('es-ES') }
+        ]);
+
+        const result = await ssp.Simple(req.body, 'usuarios');
         res.json(result);
     } catch (error) {
         console.error('Error:', error);

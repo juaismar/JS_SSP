@@ -1,10 +1,12 @@
 const MySQLAdapter = require('./adapters/mysql-adapter');
 const PostgresAdapter = require('./adapters/postgres-adapter');
+const ColumnConfig = require('./column-config');
 
-class DataTablesServer {
+class SSP {
     constructor(config) {
         this.config = config;
         this.adapter = this.createAdapter(config);
+        this.columns = [];
     }
 
     createAdapter(config) {
@@ -18,7 +20,11 @@ class DataTablesServer {
         }
     }
 
-    async processRequest(params) {
+    setColumns(columns) {
+        this.columns = columns.map(col => new ColumnConfig(col));
+    }
+
+    async Simple(params, table) {
         const {
             draw,
             start,
@@ -26,8 +32,6 @@ class DataTablesServer {
             search,
             order,
             columns,
-            table = 'usuarios',
-            searchableColumns = ['nombre', 'email']
         } = params;
 
         try {
@@ -35,11 +39,20 @@ class DataTablesServer {
             const totalRecords = await this.adapter.count(table);
 
             // Construir la consulta base
-            let query = `SELECT * FROM ${this.adapter.escapeIdentifier(table)}`;
+            const selectColumns = this.columns.map(col => 
+                this.adapter.escapeIdentifier(col.db)
+            ).join(', ');
+
+            let query = `SELECT ${selectColumns} FROM ${this.adapter.escapeIdentifier(table)}`;
             const queryParams = [];
 
             // Aplicar búsqueda global
             if (search && search.value) {
+                const searchableColumns = columns
+                    .filter(col => col.searchable === 'true')
+                    .map(col => this.columns.find(c => c.dt === col.data)?.db)
+                    .filter(Boolean);
+                
                 const whereClause = this.adapter.buildWhereClause(search.value, searchableColumns);
                 query += ' ' + whereClause;
                 if (whereClause) {
@@ -50,10 +63,15 @@ class DataTablesServer {
             }
 
             // Aplicar ordenamiento
-            if (order && order.length > 0) {
-                const orderColumn = columns[order[0].column].data;
-                const orderDir = order[0].dir;
-                query += ` ORDER BY ${this.adapter.escapeIdentifier(orderColumn)} ${orderDir}`;
+            if (order && order.length > 0 && this.columns.length > 0) {
+                const orderColumn = columns[order[0].column];
+                if (orderColumn && orderColumn.orderable === 'true') {
+                    const orderDir = order[0].dir;
+                    const dbColumn = this.columns.find(c => c.dt === orderColumn.data)?.db;
+                    if (dbColumn) {
+                        query += ` ORDER BY ${this.adapter.escapeIdentifier(dbColumn)} ${orderDir}`;
+                    }
+                }
             }
 
             // Aplicar paginación
@@ -63,9 +81,23 @@ class DataTablesServer {
             // Ejecutar la consulta
             const rows = await this.adapter.query(query, queryParams);
 
+            // Formatear los resultados
+            const formattedRows = rows.map(row => {
+                const formattedRow = {};
+                this.columns.forEach(col => {
+                    formattedRow[col.dt] = col.format(row[col.db]);
+                });
+                return formattedRow;
+            });
+
             // Obtener el total de registros filtrados
             let filteredRecords = totalRecords;
             if (search && search.value) {
+                const searchableColumns = columns
+                    .filter(col => col.searchable === 'true')
+                    .map(col => this.columns.find(c => c.dt === col.data)?.db)
+                    .filter(Boolean);
+                
                 const whereClause = this.adapter.buildWhereClause(search.value, searchableColumns);
                 filteredRecords = await this.adapter.count(table, whereClause, 
                     searchableColumns.map(() => `%${search.value}%`));
@@ -75,13 +107,13 @@ class DataTablesServer {
                 draw: parseInt(draw),
                 recordsTotal: totalRecords,
                 recordsFiltered: filteredRecords,
-                data: rows
+                data: formattedRows
             };
         } catch (error) {
-            console.error('Error en processRequest:', error);
+            console.error('Error en Simple:', error);
             throw error;
         }
     }
 }
 
-module.exports = { DataTablesServer }; 
+module.exports = { SSP }; 

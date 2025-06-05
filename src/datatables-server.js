@@ -6,7 +6,6 @@ class SSP {
     constructor(config) {
         this.config = config;
         this.adapter = this.createAdapter(config);
-        this.columns = [];
     }
 
     createAdapter(config) {
@@ -20,26 +19,24 @@ class SSP {
         }
     }
 
-    setColumns(columns) {
-        this.columns = columns.map(col => new ColumnConfig(col));
-    }
-
-    async Simple(params, table) {
+    async Simple(params, table, columns) {
         const {
             draw,
             start,
             length,
             search,
             order,
-            columns,
         } = params;
 
         try {
+            // Configurar las columnas
+            const columnConfigs = columns.map(col => new ColumnConfig(col));
+
             // Obtener el total de registros
             const totalRecords = await this.adapter.count(table);
 
             // Construir la consulta base
-            const selectColumns = this.columns.map(col => 
+            const selectColumns = columnConfigs.map(col => 
                 this.adapter.escapeIdentifier(col.db)
             ).join(', ');
 
@@ -48,9 +45,9 @@ class SSP {
 
             // Aplicar búsqueda global
             if (search && search.value) {
-                const searchableColumns = columns
+                const searchableColumns = params.columns
                     .filter(col => col.searchable === 'true')
-                    .map(col => this.columns.find(c => c.dt === col.data)?.db)
+                    .map(col => columnConfigs.find(c => c.dt === col.data)?.db)
                     .filter(Boolean);
                 
                 const whereClause = this.adapter.buildWhereClause(search.value, searchableColumns);
@@ -63,11 +60,11 @@ class SSP {
             }
 
             // Aplicar ordenamiento
-            if (order && order.length > 0 && this.columns.length > 0) {
-                const orderColumn = columns[order[0].column];
+            if (order && order.length > 0 && columnConfigs.length > 0) {
+                const orderColumn = params.columns[order[0].column];
                 if (orderColumn && orderColumn.orderable === 'true') {
                     const orderDir = order[0].dir;
-                    const dbColumn = this.columns.find(c => c.dt === orderColumn.data)?.db;
+                    const dbColumn = columnConfigs.find(c => c.dt === orderColumn.data)?.db;
                     if (dbColumn) {
                         query += ` ORDER BY ${this.adapter.escapeIdentifier(dbColumn)} ${orderDir}`;
                     }
@@ -84,7 +81,7 @@ class SSP {
             // Formatear los resultados
             const formattedRows = rows.map(row => {
                 const formattedRow = {};
-                this.columns.forEach(col => {
+                columnConfigs.forEach(col => {
                     formattedRow[col.dt] = col.format(row[col.db]);
                 });
                 return formattedRow;
@@ -93,9 +90,9 @@ class SSP {
             // Obtener el total de registros filtrados
             let filteredRecords = totalRecords;
             if (search && search.value) {
-                const searchableColumns = columns
+                const searchableColumns = params.columns
                     .filter(col => col.searchable === 'true')
-                    .map(col => this.columns.find(c => c.dt === col.data)?.db)
+                    .map(col => columnConfigs.find(c => c.dt === col.data)?.db)
                     .filter(Boolean);
                 
                 const whereClause = this.adapter.buildWhereClause(search.value, searchableColumns);

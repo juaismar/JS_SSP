@@ -27,7 +27,10 @@ class MySQLAdapter extends BaseAdapter {
     }
 
     async count(table, whereClause = '', params = []) {
-        const sql = `SELECT COUNT(*) as total FROM ${this.escapeIdentifier(table)} ${whereClause}`;
+        const sql = `SELECT COUNT(*) as total FROM ${this.escapeIdentifier(table)} `;
+        if (whereClause != "") {
+            sql += ' WHERE ' + whereClause;
+        }
         const [result] = await this.query(sql, params);
         return result.total;
     }

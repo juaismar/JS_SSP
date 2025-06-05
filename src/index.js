@@ -34,7 +34,7 @@ app.post('/api/data', async (req, res) => {
             { db: 'id', dt: 'id', formatter: null },
             { db: 'nombre', dt: 'nombre', formatter: (value) => value.toUpperCase() },
             { db: 'email', dt: 'email', formatter: null },
-            { db: 'fecha_registro', dt: 2, formatter: (value) => new Date(value).toLocaleDateString('es-ES') }
+            { db: 'fecha_registro', dt: 'fecha_registro', formatter: (value) => new Date(value).toLocaleDateString('es-ES') }
         ];
 
         const result = await ssp.Simple(req.body, 'usuarios', columns);

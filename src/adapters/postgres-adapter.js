@@ -17,21 +17,44 @@ class PostgresAdapter extends BaseAdapter {
         }
     }
 
-    async query(sql, params) {
+    async query(table, whereClause = '', start = 0, length = 10, order = []) {
         try {
-            // Convertir los parámetros de LIMIT y OFFSET para PostgreSQL
-            const processedSql = sql.replace('LIMIT ? OFFSET ?', 'LIMIT $' + (params.length - 1) + ' OFFSET $' + params.length);
-            const result = await this.pool.query(processedSql, params);
+            // Construir la consulta base
+            let sql = `SELECT * FROM ${table}`;
+            
+            // Añadir cláusula WHERE si existe
+            if (whereClause) {
+                sql += ` WHERE ${whereClause}`;
+            }
+
+            // Añadir ordenamiento si existe
+            if (order.length > 0) {
+                sql += ` ORDER BY ${order.join(', ')}`;
+            }
+
+            // Añadir paginación
+            sql += ` LIMIT ${length} OFFSET ${start}`;
+            console.log(sql);
+
+            // Ejecutar la consulta
+            const result = await this.pool.query(sql);
             return result.rows;
         } catch (error) {
             throw new Error(`Error en la consulta PostgreSQL: ${error.message}`);
         }
     }
 
-    async count(table, whereClause = '', params = []) {
-        const sql = `SELECT COUNT(*) as total FROM ${this.escapeIdentifier(table)} ${whereClause}`;
-        const result = await this.query(sql, params);
-        return parseInt(result[0].total);
+    async count(table, whereClause = '') {
+        try {
+            let sql = `SELECT COUNT(*) as total FROM ${table}`;
+            if (whereClause) {
+                sql += ` WHERE ${whereClause}`;
+            }
+            const result = await this.pool.query(sql);
+            return parseInt(result.rows[0].total);
+        } catch (error) {
+            throw new Error(`Error en la consulta PostgreSQL: ${error.message}`);
+        }
     }
 
     escapeIdentifier(identifier) {
@@ -41,12 +64,34 @@ class PostgresAdapter extends BaseAdapter {
     buildWhereClause(searchValue, searchableColumns) {
         if (!searchValue || !searchableColumns.length) return '';
 
-        const conditions = searchableColumns.map((column, index) => 
-            `${this.escapeIdentifier(column)} ILIKE $${index + 1}`
-        );
+        const conditions = searchableColumns.map((column, index) => {
+            // Para campos numéricos, intentamos convertir el valor de búsqueda a número
+            const isNumeric = /^[0-9]+$/.test(searchValue);
+            if (isNumeric) {
+                return `${this.escapeIdentifier(column)} = $${index + 1}`;
+            }
+            // Para campos de texto, usamos ILIKE con el valor procesado
+            return `${this.escapeIdentifier(column)}::text ILIKE $${index + 1}`;
+        });
         
         return 'WHERE ' + conditions.join(' OR ');
     }
+
+    // Método para procesar los parámetros de búsqueda
+    processSearchParams(searchValue, searchableColumns) {
+        if (!searchValue || !searchableColumns.length) return [];
+
+        return searchableColumns.map(() => {
+            // Si es un número, devolvemos el número
+            if (/^[0-9]+$/.test(searchValue)) {
+                return parseInt(searchValue);
+            }
+            // Si es texto, añadimos los comodines para búsqueda parcial
+            return `%${searchValue}%`;
+        });
+    }
+
+
 }
 
 module.exports = PostgresAdapter; 

@@ -20,20 +20,12 @@ class SSP {
 
     async Simple(params, table, columns) {
         try {
-
             const columnsTypes = await this.adapter.InitBinding(table);
             
             const individualFilter = this.filterIndividual(params, columnsTypes, columns);
             const globalFilter = this.filterGlobal(params, columnsTypes, columns);
 
-            let filtersQuery = globalFilter;
-            if (filtersQuery == "") {
-                filtersQuery = individualFilter;
-            } else {
-                if(individualFilter != ""){
-                    filtersQuery = '(' +filtersQuery +  ') AND ' + individualFilter;
-                }
-            }
+            let filtersQuery = this.mergeFilters([individualFilter, globalFilter]);
 
             // Obtener los datos con filtros, ordenación y paginación
             const rows = await this.adapter.query(table, filtersQuery, params.start, params.length, this.order(params));
@@ -56,6 +48,48 @@ class SSP {
             console.error('Error en Simple:', error);
             throw error;
         }
+    }
+
+    async Complex(params, table, columns, whereResult , whereAll) {
+        try {
+            const columnsTypes = await this.adapter.InitBinding(table);
+            
+            const individualFilter = this.filterIndividual(params, columnsTypes, columns);
+            const globalFilter = this.filterGlobal(params, columnsTypes, columns);
+
+            const WhereResultFilter = whereResult.join(' AND ');
+            const WhereAllFilter = whereAll.join(' AND ');
+            
+            let filtersQuery = this.mergeFilters([individualFilter, globalFilter,WhereResultFilter,WhereAllFilter]);
+
+
+            // Obtener los datos con filtros, ordenación y paginación
+            const rows = await this.adapter.query(table, filtersQuery, params.start, params.length, this.order(params));
+            const formattedRows = this.dataOutput(rows, columns);
+
+            // Calcular el total de registros filtrados
+            let filteredCount = await this.adapter.count(table, filtersQuery);
+
+            // Obtener el total de registros
+            const recordsTotal = await this.adapter.count(table, WhereAllFilter);
+
+            // Devolver la respuesta en el formato esperado por DataTables
+            return {
+                draw: parseInt(params.draw),
+                recordsTotal: recordsTotal,
+                recordsFiltered: filteredCount,
+                data: formattedRows
+            };
+        } catch (error) {
+            console.error('Error en Complex:', error);
+            throw error;
+        }
+    }
+
+    mergeFilters(filters) {
+        // Filtrar strings vacíos y unir los que quedan con AND
+        const validFilters = filters.filter(filter => filter && filter.trim() !== '');
+        return validFilters.length > 0 ? `(${validFilters.join(') AND (')})` : '';
     }
 
     filterIndividual(params, columnsTypes, columns) {

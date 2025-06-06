@@ -128,7 +128,7 @@ class PostgresAdapter extends BaseAdapter {
 
             default:
                 // Para tipos desconocidos, intentamos búsqueda de texto case insensitive
-                return `${columnName} ILIKE '%${value}%'`;
+                return "";//`${columnName} ILIKE '%${value}%'`;
         }
     }
 

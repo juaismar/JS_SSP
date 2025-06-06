@@ -129,7 +129,7 @@ class MySQLAdapter extends BaseAdapter {
 
             default:
                 // Para tipos desconocidos, intentamos búsqueda de texto
-                return `${columnName} LIKE '%${value}%'`;
+                return "";//`${columnName} LIKE '%${value}%'`;
         }
     }
 }

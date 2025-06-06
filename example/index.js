@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { SSP } = require('./datatables-server');
+const { SSP } = require('../SSP');
 require('dotenv').config();
 
 const app = express();
@@ -10,10 +10,10 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir archivos estáticos
+// Servir archivos estÃ¡ticos
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Configuración de DataTables
+// ConfiguraciÃ³n de DataTables
 const ssp = new SSP({
     dialect: process.env.DB_DIALECT || 'mysql', // mysql, postgres, etc.
     host: process.env.DB_HOST || 'localhost',
@@ -22,7 +22,7 @@ const ssp = new SSP({
     database: process.env.DB_NAME || 'test'
 });
 
-// Ruta para la página de demostración
+// Ruta para la pÃ¡gina de demostraciÃ³n
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

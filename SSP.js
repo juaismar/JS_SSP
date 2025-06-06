@@ -19,6 +19,9 @@ class SSP {
     }
 
     async Simple(params, table, columns) {
+        console.log(params);
+        console.log(table);
+        console.log(columns);
         try {
             const columnsTypes = await this.adapter.InitBinding(table);
             

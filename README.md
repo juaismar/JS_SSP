@@ -55,9 +55,9 @@ const columns = [
 const ssp = new SSP(config);
 
 // Use in your endpoint
-app.post('/api/data', async (req, res) => {
+app.get('/api/data', async (req, res) => {
     try {
-        const result = await ssp.Simple(req.body, 'my_table', columns);
+        const result = await ssp.Simple(req.query, 'my_table', columns);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -84,8 +84,7 @@ $(document).ready(function() {
         processing: true,
         serverSide: true,
         ajax: {
-            url: '/api/data',
-            type: 'POST'
+            url: '/api/data'
         },
         columns: [
             { data: 'id' },

@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 });
 
 // Ruta para el endpoint de DataTables
-app.post('/api/data', async (req, res) => {
+app.get('/api/data', async (req, res) => {
     try {
         const columns = [
             { db: 'id', dt: 'id', formatter: null },
@@ -37,7 +37,7 @@ app.post('/api/data', async (req, res) => {
             { db: 'fecha_registro', dt: 'fecha_registro', formatter: (value) => new Date(value).toLocaleDateString('es-ES') }
         ];
 
-        const result = await ssp.Simple(req.body, 'usuarios', columns);
+        const result = await ssp.Simple(req.query, 'usuarios', columns);
         res.json(result);
     } catch (error) {
         console.error('Error:', error);

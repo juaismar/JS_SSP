@@ -5,8 +5,18 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
   },
+  "keywords": [
+    "datatables",
+    "server-side",
+    "postgres",
+    "mysql",
+    "express",
+    "nodejs"
+  ],
+  "author": "Juaismar",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
     "mysql2": "^3.6.0",
@@ -15,5 +25,13 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
-  }
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:juaismar/JS_SSP.git"
+  },
+
 } 

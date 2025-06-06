@@ -6,7 +6,6 @@
   "directories": {
     "example": "example"
   },
-  
   "repository": {
     "type": "git",
     "url": "git+https://github.com/juaismar/JS_SSP.git"
@@ -21,5 +20,10 @@
   ],
   "author": "juaismar",
   "license": "MIT",
-  "homepage": "https://github.com/juaismar/JS_SSP#readme"
+  "homepage": "https://github.com/juaismar/JS_SSP#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "mysql2": "^3.14.1",
+    "pg": "^8.16.0"
+  }
 }

@@ -93,49 +93,64 @@ class SSP {
 
     filterIndividual(params, columnsTypes, columns) {
         const conditions = [];
-        params.columns.forEach((columnReceived, index) => {
+        let i = 0;
+        
+        while (params[`columns[${i}][data]`]) {
+            const data = params[`columns[${i}][data]`];
+            const searchable = params[`columns[${i}][searchable]`];
+            const searchValue = params[`columns[${i}][search][value]`];
+            const searchRegex = params[`columns[${i}][search][regex]`];
 
-            if(columnReceived.search.value == ""){
-                return;
+            if(searchValue === ""){
+                i++;
+                continue;
             }
             
-            if (columnReceived.searchable === 'true') {
-                let columnIdx = columns.findIndex(col => col.dt === columnReceived.data);
-                let query = this.bindingTypes(columnReceived.search.value, columnsTypes, columns[columnIdx], columnReceived.search.regex);
+            if (searchable === 'true') {
+                let columnIdx = columns.findIndex(col => col.dt === data);
+                let query = this.bindingTypes(searchValue, columnsTypes, columns[columnIdx], searchRegex);
                 if (query) {
                     conditions.push(query);
                 }
-            } else{
-                console.warn(`(001) ¿Olvidaste searchable: false en la columna ${columnReceived.data}? o nombre de columna incorrecto en el lado del cliente\n (campo data del cliente: debe ser igual que el campo DT del servidor)`);
+            } else {
+                console.warn(`(001) ¿Olvidaste searchable: false en la columna ${data}? o nombre de columna incorrecto en el lado del cliente\n (campo data del cliente: debe ser igual que el campo DT del servidor)`);
             }
-        });
+            i++;
+        }
 
         return conditions.join(' AND ');
     }
 
     filterGlobal(params, columnsTypes, columns) {
-        if (!params.search || !params.search.value) {
+        const searchValue = params['search[value]'];
+        if (!searchValue) {
             return '';
         }
 
         const conditions = [];
-        for (let i = 0; i < params.columns.length; i++) {
-            if(params.columns[i].data == ""){
+        let i = 0;
+        
+        while (params[`columns[${i}][data]`]) {
+            const data = params[`columns[${i}][data]`];
+            const searchable = params[`columns[${i}][searchable]`];
+            
+            if(data === ""){
                 break;
             }
             
-            if (params.columns[i].searchable == 'true') {
-                let columnIdx = columns.findIndex(col => col.dt === params.columns[i].data);
-                let requestRegex = params.columns[i].search.regex;
+            if (searchable === 'true') {
+                let columnIdx = columns.findIndex(col => col.dt === data);
+                let searchRegex = params[`columns[${i}][search][regex]`];
 
-                let query = this.bindingTypes(params.search.value, columnsTypes, columns[columnIdx], requestRegex)
+                let query = this.bindingTypes(searchValue, columnsTypes, columns[columnIdx], searchRegex)
                 if (query) {
                     conditions.push(query);
                 }
-            } else if (col.searchable === 'true') {
-                console.warn(`(002) ¿Olvidaste searchable: false en la columna ${col.data}? o nombre de columna incorrecto en el lado del cliente\n (campo data del cliente: debe ser igual que el campo DT del servidor)`);
+            } else {
+                console.warn(`(002) ¿Olvidaste searchable: false en la columna ${data}? o nombre de columna incorrecto en el lado del cliente\n (campo data del cliente: debe ser igual que el campo DT del servidor)`);
             }
-        };
+            i++;
+        }
 
         return conditions.join(' OR ');
     }
@@ -153,24 +168,20 @@ class SSP {
 
     order(params) {
         const orderClauses = [];
-        if (!params.order || !params.order.length) {
-            return orderClauses;
-        }
+        let i = 0;
 
-        for (let i = 0; i < params.order.length; i++) {
-            const orderInfo = params.order[i];
-            const columnIndex = orderInfo.column;
-            const columnData = params.columns[columnIndex];
+        while (params[`order[${i}][column]`]) {
+            const columnIndex = parseInt(params[`order[${i}][column]`]);
+            const direction = params[`order[${i}][dir]`];
+            const data = params[`columns[${columnIndex}][data]`];
+            const orderable = params[`columns[${columnIndex}][orderable]`];
 
-            if (columnData && columnData.orderable === 'true') {
-                const columnName = columnData.data;
-                if(columnName != null){
-                    const direction = orderInfo.dir.toUpperCase();
-                    orderClauses.push(`${this.adapter.escapeIdentifier(columnName)} ${direction}`);
-                }
-            } else if (columnData && columnData.orderable === 'true') {
+            if (orderable === 'true' && data) {
+                orderClauses.push(`${this.adapter.escapeIdentifier(data)} ${direction.toUpperCase()}`);
+            } else if (orderable === 'true') {
                 console.warn(`(003) ¿Olvidaste orderable: false en la columna ${columnIndex}?`);
             }
+            i++;
         }
 
         return orderClauses;

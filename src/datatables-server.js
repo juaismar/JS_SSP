@@ -20,17 +20,12 @@ class SSP {
 
     async Simple(params, table, columns) {
         try {
-            console.log(params);
 
             const columnsTypes = await this.adapter.InitBinding(table);
             
             const individualFilter = this.filterIndividual(params, columnsTypes, columns);
             const globalFilter = this.filterGlobal(params, columnsTypes, columns);
 
-            console.log("globalFilter");
-            console.log(globalFilter);
-            console.log("individualFilter");
-            console.log(individualFilter);
             let filtersQuery = globalFilter;
             if (filtersQuery == "") {
                 filtersQuery = individualFilter;
@@ -65,16 +60,20 @@ class SSP {
 
     filterIndividual(params, columnsTypes, columns) {
         const conditions = [];
-        params.columns.forEach((col, index) => {
-            const columnConfig = params.columns.find(c => c.dt === col.data);
+        params.columns.forEach((columnReceived, index) => {
+
+            if(columnReceived.search.value == ""){
+                return;
+            }
             
-            if (columnConfig && col.searchable === 'true' && col.search && col.search.value) {
-                let query = this.bindingTypes(col.search.value, columnsTypes, col, col.search.regex);
+            if (columnReceived.searchable === 'true') {
+                let columnIdx = columns.findIndex(col => col.dt === columnReceived.data);
+                let query = this.bindingTypes(columnReceived.search.value, columnsTypes, columns[columnIdx], columnReceived.search.regex);
                 if (query) {
                     conditions.push(query);
                 }
-            } else if (col.searchable === 'true') {
-                console.warn(`(001) ¿Olvidaste searchable: false en la columna ${col.data}? o nombre de columna incorrecto en el lado del cliente\n (campo data del cliente: debe ser igual que el campo DT del servidor)`);
+            } else{
+                console.warn(`(001) ¿Olvidaste searchable: false en la columna ${columnReceived.data}? o nombre de columna incorrecto en el lado del cliente\n (campo data del cliente: debe ser igual que el campo DT del servidor)`);
             }
         });
 

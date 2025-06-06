@@ -9,6 +9,8 @@
     <style>
         .container { margin-top: 2rem; }
         .dataTables_wrapper { margin-top: 1rem; }
+        .filter-row { margin-bottom: 1rem; }
+        .filter-row input { width: 100%; }
     </style>
 </head>
 <body>
@@ -16,6 +18,20 @@
         <h1>DataTables Server-Side Demo</h1>
         <div class="card">
             <div class="card-body">
+                <div class="row filter-row">
+                    <div class="col">
+                        <input type="text" class="form-control" placeholder="Filtrar por ID" data-column="0">
+                    </div>
+                    <div class="col">
+                        <input type="text" class="form-control" placeholder="Filtrar por Nombre" data-column="1">
+                    </div>
+                    <div class="col">
+                        <input type="text" class="form-control" placeholder="Filtrar por Email" data-column="2">
+                    </div>
+                    <div class="col">
+                        <input type="text" class="form-control" placeholder="Filtrar por Fecha" data-column="3">
+                    </div>
+                </div>
                 <table id="usuariosTable" class="table table-striped">
                     <thead>
                         <tr>
@@ -35,7 +51,7 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#usuariosTable').DataTable({
+            var table = $('#usuariosTable').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: {
@@ -51,6 +67,12 @@
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
                 }
+            });
+
+            // Aplicar filtros individuales
+            $('.filter-row input').on('keyup change', function() {
+                var columnIndex = $(this).data('column');
+                table.column(columnIndex).search(this.value).draw();
             });
         });
     </script>

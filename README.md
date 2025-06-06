@@ -6,58 +6,58 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-%3E%3D12.0-blue.svg)](https://www.postgresql.org)
 [![MySQL](https://img.shields.io/badge/MySQL-%3E%3D8.0-orange.svg)](https://www.mysql.com)
 
-Una librería JavaScript para implementar Server-Side Processing en DataTables con soporte para múltiples bases de datos.
+A JavaScript library for implementing Server-Side Processing in DataTables with support for multiple databases.
 
-## 🚀 Características
+## 🚀 Features
 
-- ✨ Soporte para PostgreSQL y MySQL
-- 🔍 Búsqueda avanzada con filtros individuales y globales
-- 📊 Paginación y ordenamiento
-- 🛡️ Protección contra inyección SQL
-- 🔄 Tipado dinámico de columnas
-- 🎯 Fácil de integrar con Express.js
+- ✨ PostgreSQL and MySQL support
+- 🔍 Advanced search with individual and global filters
+- 📊 Pagination and sorting
+- 🛡️ SQL injection protection
+- 🔄 Dynamic column typing
+- 🎯 Easy integration with Express.js
 
-## 📋 Requisitos
+## 📋 Requirements
 
 - Node.js >= 14.0.0
-- PostgreSQL >= 12.0 o MySQL >= 8.0
-- Express.js (opcional, para el ejemplo)
+- PostgreSQL >= 12.0 or MySQL >= 8.0
+- Express.js (optional, for example)
 
-## 🔧 Instalación
+## 🔧 Installation
 
 ```bash
 npm install js-ssp
 ```
 
-## 🎮 Uso Básico
+## 🎮 Basic Usage
 
 ```javascript
 const { SSP } = require('js-ssp');
 
-// Configuración de la base de datos
+// Database configuration
 const config = {
-    dialect: 'postgres', // o 'mysql'
+    dialect: 'postgres', // or 'mysql'
     host: 'localhost',
-    user: 'usuario',
-    password: 'contraseña',
-    database: 'mi_base_de_datos',
-    port: 5432 // 3306 para MySQL
+    user: 'user',
+    password: 'password',
+    database: 'my_database',
+    port: 5432 // 3306 for MySQL
 };
 
-// Configuración de columnas
+// Column configuration
 const columns = [
     { db: 'id', dt: 'id' },
-    { db: 'nombre', dt: 'nombre' },
+    { db: 'name', dt: 'name' },
     { db: 'email', dt: 'email' }
 ];
 
-// Crear instancia
+// Create instance
 const ssp = new SSP(config);
 
-// Usar en tu endpoint
+// Use in your endpoint
 app.post('/api/data', async (req, res) => {
     try {
-        const result = await ssp.Simple(req.body, 'mi_tabla', columns);
+        const result = await ssp.Simple(req.body, 'my_table', columns);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -65,14 +65,14 @@ app.post('/api/data', async (req, res) => {
 });
 ```
 
-## 📝 Ejemplo Completo
+## 📝 Complete Example
 
 ```html
-<table id="miTabla" class="table">
+<table id="myTable" class="table">
     <thead>
         <tr>
             <th>ID</th>
-            <th>Nombre</th>
+            <th>Name</th>
             <th>Email</th>
         </tr>
     </thead>
@@ -80,7 +80,7 @@ app.post('/api/data', async (req, res) => {
 
 <script>
 $(document).ready(function() {
-    $('#miTabla').DataTable({
+    $('#myTable').DataTable({
         processing: true,
         serverSide: true,
         ajax: {
@@ -89,7 +89,7 @@ $(document).ready(function() {
         },
         columns: [
             { data: 'id' },
-            { data: 'nombre' },
+            { data: 'name' },
             { data: 'email' }
         ]
     });
@@ -97,51 +97,14 @@ $(document).ready(function() {
 </script>
 ```
 
-## 🔍 Características Avanzadas
+## 🤝 Contributing
 
-### Filtros Individuales
-```javascript
-// En el frontend
-columns: [
-    { 
-        data: 'nombre',
-        searchable: true,
-        search: {
-            value: '',
-            regex: false
-        }
-    }
-]
-```
+Contributions are welcome.
+We need:
+- More adapters for MongoDB, SQLite...
+- Proper RegEx implementation
+- Tests
 
-### Ordenamiento
-```javascript
-// En el frontend
-order: [
-    [0, 'asc'],  // Ordenar por ID ascendente
-    [1, 'desc']  // Luego por nombre descendente
-]
-```
+## 📄 License
 
-## 📚 Documentación
-
-Para más detalles sobre la configuración y uso, consulta la [documentación completa](docs/README.md).
-
-## 🤝 Contribuir
-
-Las contribuciones son bienvenidas. Por favor, lee [CONTRIBUTING.md](CONTRIBUTING.md) para detalles sobre nuestro código de conducta y el proceso para enviarnos pull requests.
-
-## 📄 Licencia
-
-Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
-
-## 🙏 Agradecimientos
-
-- [DataTables](https://datatables.net/)
-- [Express.js](https://expressjs.com/)
-- [node-postgres](https://node-postgres.com/)
-- [mysql2](https://github.com/sidorares/node-mysql2)
-
-## 📞 Soporte
-
-Si encuentras algún problema o tienes alguna sugerencia, por favor [abre un issue](https://github.com/tu-usuario/js-ssp/issues). 
+This project is licensed under the MIT License.

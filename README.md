@@ -23,17 +23,6 @@ A JavaScript library for implementing Server-Side Processing in DataTables with 
 - PostgreSQL >= 12.0 or MySQL >= 8.0
 - Express.js (optional, for example)
 
-## ⚙️ Required Configuration
-
-For the library to work properly, it is **mandatory** to configure the following Express middlewares:
-
-```javascript
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-```
-
-Without these middlewares, the library will not be able to process DataTables requests correctly.
-
 ## 🔧 Installation
 
 ```bash
@@ -48,10 +37,6 @@ const express = require('express');
 
 const app = express();
 const port = process.env.PORT || 3000;
-
-// ⚠️ IMPORTANTE: Es obligatorio usar estos middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // Database configuration
 const config = {

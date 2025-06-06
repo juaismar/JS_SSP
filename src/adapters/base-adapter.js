@@ -4,23 +4,27 @@ class BaseAdapter {
     }
 
     async connect() {
-        throw new Error('Método connect() debe ser implementado por el adaptador');
+        throw new Error('El método connect debe ser implementado por el adaptador específico');
     }
 
-    async query(sql, params) {
-        throw new Error('Método query() debe ser implementado por el adaptador');
+    async query(table, whereClause = '', start = 0, length = 10, order = []) {
+        throw new Error('El método query debe ser implementado por el adaptador específico');
     }
 
-    async count(table, whereClause = '', params = []) {
-        throw new Error('Método count() debe ser implementado por el adaptador');
+    async count(table, whereClause = '') {
+        throw new Error('El método count debe ser implementado por el adaptador específico');
     }
 
     escapeIdentifier(identifier) {
-        throw new Error('Método escapeIdentifier() debe ser implementado por el adaptador');
+        throw new Error('El método escapeIdentifier debe ser implementado por el adaptador específico');
     }
 
-    buildWhereClause(searchValue, searchableColumns) {
-        throw new Error('Método buildWhereClause() debe ser implementado por el adaptador');
+    async InitBinding(table) {
+        throw new Error('El método InitBinding debe ser implementado por el adaptador específico');
+    }
+
+    bindingTypesQuery(value, columnInfo, isRegEx, column) {
+        throw new Error('El método bindingTypesQuery debe ser implementado por el adaptador específico');
     }
 }
 

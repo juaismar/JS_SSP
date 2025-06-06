@@ -39,15 +39,6 @@ class MySQLAdapter extends BaseAdapter {
         return '`' + identifier.replace(/`/g, '``') + '`';
     }
 
-    buildWhereClause(searchValue, searchableColumns) {
-        if (!searchValue || !searchableColumns.length) return '';
-
-        const conditions = searchableColumns.map(column => 
-            `${this.escapeIdentifier(column)} LIKE ?`
-        );
-        
-        return 'WHERE ' + conditions.join(' OR ');
-    }
 }
 
 module.exports = MySQLAdapter; 

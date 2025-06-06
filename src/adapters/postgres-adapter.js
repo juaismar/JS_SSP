@@ -91,6 +91,77 @@ class PostgresAdapter extends BaseAdapter {
         });
     }
 
+    async InitBinding(table) {
+        try {
+            const sql = `
+                SELECT 
+                    column_name as "columnName",
+                    data_type as "type",
+                    udt_name as "udtName"
+                FROM 
+                    information_schema.columns 
+                WHERE 
+                    table_name = $1
+            `;
+            
+            const result = await this.pool.query(sql, [table]);
+            return result.rows;
+        } catch (error) {
+            throw new Error(`Error al obtener tipos de columnas: ${error.message}`);
+        }
+    }
+
+    bindingTypesQuery(value, columnInfo, isRegEx, column) {
+        const columnName = this.escapeIdentifier(column.db);
+
+        switch (columnInfo.udtName.toLowerCase()) {
+            case 'string':
+            case 'text':
+            case 'varchar':
+            case 'char':
+                if (isRegEx == "true") {
+                    return `${columnName} ~ '${value}'`;
+                }
+                return `${columnName} LIKE '%${value}%'`;
+
+            case 'int4':
+            case 'int8':
+            case 'int':
+            case 'integer':
+            case 'bigint':
+            case 'smallint':
+                const numValue = parseInt(value);
+                if (isNaN(numValue)) {
+                    return '';
+                }
+                return `${columnName} = ${numValue}`;
+
+            case 'float':
+            case 'double':
+            case 'decimal':
+            case 'numeric':
+                const floatValue = parseFloat(value);
+                if (isNaN(floatValue)) {
+                    return '';
+                }
+                return `${columnName} = ${floatValue}`;
+
+            case 'boolean':
+                const boolValue = value.toLowerCase() === 'true' ? 'true' : 'false';
+                return `${columnName} = ${boolValue}`;
+
+            case 'date':
+                return `${columnName} = '${value}'`;
+
+            case 'timestamp':
+            case 'timestamptz':
+                return "";//`${columnName} = '${value}'`;
+
+            default:
+                // Para tipos desconocidos, intentamos búsqueda de texto
+                return `${columnName}::text ILIKE '%${value}%'`;
+        }
+    }
 
 }
 

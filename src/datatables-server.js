@@ -1,6 +1,5 @@
 const MySQLAdapter = require('./adapters/mysql-adapter');
 const PostgresAdapter = require('./adapters/postgres-adapter');
-const ColumnConfig = require('./column-config');
 
 class SSP {
     constructor(config) {
@@ -22,15 +21,23 @@ class SSP {
     async Simple(params, table, columns) {
         try {
             console.log(params);
-            
-            const individualFilter = this.filterIndividual(params);
-            const globalFilter = this.filterGlobal(params);
 
-            let filtersQuery = individualFilter;
+            const columnsTypes = await this.adapter.InitBinding(table);
+            
+            const individualFilter = this.filterIndividual(params, columnsTypes, columns);
+            const globalFilter = this.filterGlobal(params, columnsTypes, columns);
+
+            console.log("globalFilter");
+            console.log(globalFilter);
+            console.log("individualFilter");
+            console.log(individualFilter);
+            let filtersQuery = globalFilter;
             if (filtersQuery == "") {
-                filtersQuery = globalFilter;
+                filtersQuery = individualFilter;
             } else {
-                filtersQuery += ' AND ' + globalFilter;
+                if(individualFilter != ""){
+                    filtersQuery = '(' +filtersQuery +  ') AND ' + individualFilter;
+                }
             }
 
             // Obtener los datos con filtros, ordenación y paginación
@@ -39,13 +46,9 @@ class SSP {
 
             // Calcular el total de registros filtrados
             let filteredCount = await this.adapter.count(table, filtersQuery);
-            console.log("filteredCount");
-            console.log(filteredCount);
 
             // Obtener el total de registros
             const recordsTotal = await this.adapter.count(table);
-            console.log("recordsTotal");
-            console.log(recordsTotal);
 
             // Devolver la respuesta en el formato esperado por DataTables
             return {
@@ -60,21 +63,13 @@ class SSP {
         }
     }
 
-    filterIndividual(params) {
+    filterIndividual(params, columnsTypes, columns) {
         const conditions = [];
         params.columns.forEach((col, index) => {
             const columnConfig = params.columns.find(c => c.dt === col.data);
             
             if (columnConfig && col.searchable === 'true' && col.search && col.search.value) {
-                const isNumeric = /^[0-9]+$/.test(col.search.value);
-                let query;
-
-                if (isNumeric) {
-                    query = `${this.adapter.escapeIdentifier(columnConfig.db)} = ${parseInt(col.search.value)}`;
-                } else {
-                    query = `${this.adapter.escapeIdentifier(columnConfig.db)}::text ILIKE '%${col.search.value}%'`;
-                }
-
+                let query = this.bindingTypes(col.search.value, columnsTypes, col, col.search.regex);
                 if (query) {
                     conditions.push(query);
                 }
@@ -86,33 +81,29 @@ class SSP {
         return conditions.join(' AND ');
     }
 
-    filterGlobal(params) {
+    filterGlobal(params, columnsTypes, columns) {
         if (!params.search || !params.search.value) {
             return '';
         }
 
         const conditions = [];
-
-        requestColumns.forEach((col, index) => {
-            const columnConfig = params.columns.find(c => c.dt === col.data);
+        for (let i = 0; i < params.columns.length; i++) {
+            if(params.columns[i].data == ""){
+                break;
+            }
             
-            if (columnConfig && col.searchable === 'true') {
-                const isNumeric = /^[0-9]+$/.test(search.value);
-                let query;
+            if (params.columns[i].searchable == 'true') {
+                let columnIdx = columns.findIndex(col => col.dt === params.columns[i].data);
+                let requestRegex = params.columns[i].search.regex;
 
-                if (isNumeric) {
-                    query = `${this.adapter.escapeIdentifier(columnConfig.db)} = ${parseInt(search.value)}`;
-                } else {
-                    query = `${this.adapter.escapeIdentifier(columnConfig.db)}::text ILIKE '%${search.value}%'`;
-                }
-
+                let query = this.bindingTypes(params.search.value, columnsTypes, columns[columnIdx], requestRegex)
                 if (query) {
                     conditions.push(query);
                 }
             } else if (col.searchable === 'true') {
                 console.warn(`(002) ¿Olvidaste searchable: false en la columna ${col.data}? o nombre de columna incorrecto en el lado del cliente\n (campo data del cliente: debe ser igual que el campo DT del servidor)`);
             }
-        });
+        };
 
         return conditions.join(' OR ');
     }
@@ -152,6 +143,49 @@ class SSP {
 
         return orderClauses;
     }
+
+    bindingTypes(value, columnsType, column, isRegEx) {
+        
+        const columnInfo = columnsType.find(col => 
+            column.db === col.columnName
+        );
+
+        if (columnInfo) {
+            return this.adapter.bindingTypesQuery(
+                value,
+                columnInfo,
+                isRegEx,
+                column
+            );
+        }
+
+        return '';
+    }
+
+    removeEscapeChar(str) {
+        return str.replace(/"/g, '');
+    }
+
+    checkReserved(columnName) {
+        // Lista de palabras reservadas en PostgreSQL
+        const reservedWords = [
+            'all', 'analyse', 'analyze', 'and', 'any', 'array', 'as', 'asc', 'asymmetric',
+            'authorization', 'binary', 'both', 'case', 'cast', 'check', 'collate', 'column',
+            'constraint', 'create', 'cross', 'current_date', 'current_role', 'current_time',
+            'current_timestamp', 'current_user', 'default', 'deferrable', 'desc', 'distinct',
+            'do', 'else', 'end', 'except', 'false', 'for', 'foreign', 'freeze', 'from', 'full',
+            'grant', 'group', 'having', 'in', 'initially', 'inner', 'intersect', 'into', 'is',
+            'isnull', 'join', 'leading', 'left', 'like', 'limit', 'localtime', 'localtimestamp',
+            'natural', 'not', 'notnull', 'null', 'offset', 'on', 'only', 'or', 'order', 'outer',
+            'overlaps', 'placing', 'primary', 'references', 'right', 'select', 'session_user',
+            'similar', 'some', 'symmetric', 'table', 'then', 'to', 'trailing', 'true', 'union',
+            'unique', 'user', 'using', 'when', 'where', 'with'
+        ];
+
+        return reservedWords.includes(columnName.toLowerCase());
+    }
+
+    
 }
 
 module.exports = { SSP }; 

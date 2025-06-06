@@ -1,25 +1,20 @@
 const express = require('express');
 const path = require('path');
 const { SSP } = require('../SSP');
-require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3000;
-
-// Middleware para parsear JSON
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const port = 3000;
 
 // Servir archivos estÃ¡ticos
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ConfiguraciÃ³n de DataTables
 const ssp = new SSP({
-    dialect: process.env.DB_DIALECT || 'mysql', // mysql, postgres, etc.
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'test'
+    dialect: 'postgres', // mysql, postgres, etc.
+    host: 'localhost',
+    user: 'postgres',
+    password: 'postgres',
+    database:  'datatables_demo'
 });
 
 // Ruta para la pÃ¡gina de demostraciÃ³n
@@ -30,6 +25,7 @@ app.get('/', (req, res) => {
 // Ruta para el endpoint de DataTables
 app.get('/api/data', async (req, res) => {
     try {
+        console.log(req.query) ;
         const columns = [
             { db: 'id', dt: 'id', formatter: null },
             { db: 'nombre', dt: 'nombre', formatter: (value) => value.toUpperCase() },

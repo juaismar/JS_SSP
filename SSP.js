@@ -62,7 +62,6 @@ class SSP {
             
             let filtersQuery = this.mergeFilters([individualFilter, globalFilter,WhereResultFilter,WhereAllFilter]);
 
-
             // Obtener los datos con filtros, ordenación y paginación
             const rows = await this.adapter.query(table, filtersQuery, params.start, params.length, this.order(params));
             const formattedRows = this.dataOutput(rows, columns);
@@ -194,30 +193,6 @@ class SSP {
 
         return '';
     }
-
-    removeEscapeChar(str) {
-        return str.replace(/"/g, '');
-    }
-
-    checkReserved(columnName) {
-        // Lista de palabras reservadas en PostgreSQL
-        const reservedWords = [
-            'all', 'analyse', 'analyze', 'and', 'any', 'array', 'as', 'asc', 'asymmetric',
-            'authorization', 'binary', 'both', 'case', 'cast', 'check', 'collate', 'column',
-            'constraint', 'create', 'cross', 'current_date', 'current_role', 'current_time',
-            'current_timestamp', 'current_user', 'default', 'deferrable', 'desc', 'distinct',
-            'do', 'else', 'end', 'except', 'false', 'for', 'foreign', 'freeze', 'from', 'full',
-            'grant', 'group', 'having', 'in', 'initially', 'inner', 'intersect', 'into', 'is',
-            'isnull', 'join', 'leading', 'left', 'like', 'limit', 'localtime', 'localtimestamp',
-            'natural', 'not', 'notnull', 'null', 'offset', 'on', 'only', 'or', 'order', 'outer',
-            'overlaps', 'placing', 'primary', 'references', 'right', 'select', 'session_user',
-            'similar', 'some', 'symmetric', 'table', 'then', 'to', 'trailing', 'true', 'union',
-            'unique', 'user', 'using', 'when', 'where', 'with'
-        ];
-
-        return reservedWords.includes(columnName.toLowerCase());
-    }
-
     
 }
 

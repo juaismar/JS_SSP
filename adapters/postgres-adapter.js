@@ -20,7 +20,7 @@ class PostgresAdapter extends BaseAdapter {
     async query(table, whereClause = '', start = 0, length = 10, order = []) {
         try {
             // Construir la consulta base
-            let sql = `SELECT * FROM ${table}`;
+            let sql = `SELECT * FROM ${this.escapeIdentifier(table)}`;
             
             // Añadir cláusula WHERE si existe
             if (whereClause) {
@@ -45,7 +45,7 @@ class PostgresAdapter extends BaseAdapter {
 
     async count(table, whereClause = '') {
         try {
-            let sql = `SELECT COUNT(*) as total FROM ${table}`;
+            let sql = `SELECT COUNT(*) as total FROM ${this.escapeIdentifier(table)}`;
             if (whereClause) {
                 sql += ` WHERE ${whereClause}`;
             }

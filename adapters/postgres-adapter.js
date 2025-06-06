@@ -34,7 +34,6 @@ class PostgresAdapter extends BaseAdapter {
 
             // Añadir paginación
             sql += ` LIMIT ${length} OFFSET ${start}`;
-            console.log(sql);
 
             // Ejecutar la consulta
             const result = await this.pool.query(sql);

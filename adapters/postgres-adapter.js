@@ -116,6 +116,7 @@ class PostgresAdapter extends BaseAdapter {
                 return `${columnName} = ${floatValue}`;
 
             case 'boolean':
+            case 'bool':
                 const boolValue = value.toLowerCase() === 'true' ? 'true' : 'false';
                 return `${columnName} = ${boolValue}`;
 

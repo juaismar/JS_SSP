@@ -1,6 +1,6 @@
 {
   "name": "js_ssp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Datatable server side for JS",
   "main": "SSP.js",
   "directories": {

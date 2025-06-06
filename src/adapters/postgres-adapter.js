@@ -120,9 +120,9 @@ class PostgresAdapter extends BaseAdapter {
             case 'varchar':
             case 'char':
                 if (isRegEx == "true") {
-                    return `${columnName} ~ '${value}'`;
+                    return `${columnName} ~* '${value}'`;
                 }
-                return `${columnName} LIKE '%${value}%'`;
+                return `${columnName} ILIKE '%${value}%'`;
 
             case 'int4':
             case 'int8':
@@ -158,8 +158,8 @@ class PostgresAdapter extends BaseAdapter {
                 return "";//`${columnName} = '${value}'`;
 
             default:
-                // Para tipos desconocidos, intentamos búsqueda de texto
-                return `${columnName}::text ILIKE '%${value}%'`;
+                // Para tipos desconocidos, intentamos búsqueda de texto case insensitive
+                return `${columnName} ILIKE '%${value}%'`;
         }
     }
 
